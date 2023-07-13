@@ -7,6 +7,8 @@ import { FieldValues, SubmitHandler, useForm } from 'react-hook-form';
 import AuthSocialButton from './AuthSocialButton';
 import {BsGithub, BsGoogle} from 'react-icons/bs'
 import axios from 'axios';
+import { toast } from 'react-hot-toast';
+import {signIn} from "next-auth/react";
 
 type Variant = 'LOGIN' | 'REGISTER';
 
@@ -38,14 +40,36 @@ const AuthForm = () => {
         setIsLoading(true);
         if (variant === 'REGISTER') {
             axios.post('api/register', data)
-        } else {
-            // Login
+            .catch(() => toast.error("Something went wrong!"))
+            .finally(() => setIsLoading(false))
+        } 
+        if(variant === 'LOGIN') {
+            signIn("credentials", {... data, redirect: false})
+            .then((callback) => {
+                if(callback?.error) {
+                    toast.error('Invalid credentials');
+                }
+
+                if(callback?.ok && !callback?.error) {
+                    toast.success('Logged in!')
+                }
+            })
+            .finally(() => setIsLoading(false))
         }
     };
 
-    const socialAction = (aciton: string) => {
+    const socialAction = (action: string) => {
         setIsLoading(true);
-        // Next Auth Sign in
+        signIn(action , {redirect: false })
+        .then((callback) => {
+            if(callback?.error) {
+                toast.error("Invalid Credentials")
+            }
+            if(callback?.ok && !callback?.error) {
+                toast.success("Logged in!")
+            }
+        })
+        .finally(() => setIsLoading(false))
     };
 
     return (
@@ -62,10 +86,10 @@ const AuthForm = () => {
             >
                 <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
                     {variant === 'REGISTER' && (
-                        <Input id="name" label="Name" register={register} errors={errors} required />
+                        <Input id="name" label="Name" register={register} errors={errors} required = {false}/>
                     )}
-                    <Input id="email" label="Email" register={register} errors={errors} required />
-                    <Input id="password" label="Password" register={register} errors={errors} required />
+                    <Input id="email" label="Email" register={register} errors={errors} required = {false} />
+                    <Input id="password" label="Password" register={register} errors={errors} required = {false} />
                     <div>
                         <Button disabled= {isLoading} fullWidth type = "submit">{variant === 'LOGIN' ? 'Sign in' : 'Register'}</Button>
                     </div>
