@@ -45,7 +45,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({
             return `${data.users.length} members`;
         }
         return isActive ? 'Active' : 'Offline'
-    }, [data])
+    }, [data, isActive])
     return (  
         <>
              <ConfirmModal 
